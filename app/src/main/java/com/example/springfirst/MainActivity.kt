@@ -1,8 +1,11 @@
 package com.example.springfirst
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.springfirst.imageloader.ImageCache
 import com.example.springfirst.imageloader.ImageLoader
 import com.google.gson.Gson
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import java.lang.ref.ReferenceQueue
@@ -19,9 +22,15 @@ class MainActivity : AppCompatActivity() {
 
         val job= Job()
 
-        val thread = CoroutineScope(job)
 
-        ImageLoader.with(this).load(picture1).into(findViewById(R.id.imageView))
+        val mutableList= mutableListOf<Test>()
+
+        recycler_view.adapter = RvAdapter()
+
+        recycler_view.layoutManager = LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false)
+
+        val thread = CoroutineScope(job)
+        //ImageLoader.with(this).load(picture1).into(findViewById(R.id.i))
 
     }
 
