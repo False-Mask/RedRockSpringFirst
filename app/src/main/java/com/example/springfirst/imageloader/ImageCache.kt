@@ -3,9 +3,11 @@ package com.example.springfirst.imageloader
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import android.util.LruCache
+import java.io.File
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
 import java.util.*
@@ -139,6 +141,33 @@ object ImageCache {
         scalePercent: Int
     ): Boolean {
         return bitmap?.allocationByteCount!! >= width*height*(if (bitmap.config == Bitmap.Config.ARGB_8888) 4 else 2)
+    }
+
+
+    //地址
+    private lateinit var path:String
+
+    fun setDirPath(dir: String?): ImageCache {
+        path = dir?:""
+        return this
+    }
+
+    //读取bitmap
+    fun write(bitmap: Bitmap,key:String): Boolean {
+        val file = File("$path/$key")
+        val out = file.outputStream().buffered()
+        val boolean = bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+        out.flush()
+        return boolean
+    }
+
+    //写入
+    fun read(key:String):Bitmap?{
+        val bitmap = BitmapFactory.decodeFile("$path/$key")
+        if (bitmap!=null){
+            putBitmapToCathe(key,bitmap)
+        }
+        return bitmap
     }
 
 }

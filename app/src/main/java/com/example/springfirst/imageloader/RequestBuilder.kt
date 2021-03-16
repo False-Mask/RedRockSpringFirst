@@ -1,7 +1,6 @@
 package com.example.springfirst.imageloader
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -11,21 +10,10 @@ import androidx.fragment.app.Fragment
 import com.example.springfirst.tools.MyApplication
 import com.example.springfirst.tools.NetTool
 import io.reactivex.Observable
-import io.reactivex.ObservableSource
-import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
-import io.reactivex.schedulers.Schedulers
 import io.reactivex.schedulers.Schedulers.io
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.*
 import kotlin.collections.HashMap
 
 
@@ -61,28 +49,36 @@ class RequestBuilder private constructor(){
         }
     }
 
-    fun load(url:String,hashMap: HashMap<String,String> = HashMap()):RequestBuilder{
+    fun load(url:String,hashMap: HashMap<String,String> = HashMap(),key:String = "0"):RequestBuilder{
         //加载图片
         //异步发送消息获取
 
         //在一级缓存中读取内存
 
         val observable = Observable.create<String> {
-            it.onNext("1")
+            it.onNext(key)
             it.onComplete()
         }
             .observeOn(io())
             .map { t ->
                 var bitmap =ImageCache.getBitmapFromCache(t)
                 //当缓存中没有读取到的时候就在复用池中寻找是否存在该CaChe
-                //如果还是没有
+                //如果没有
+                //读取内存
+                //二级缓存
                 if (bitmap == null){
-                    val reusable  = ImageCache.getReUsable("1",660,600,1)
-                    bitmap = getImageFromNet(url,hashMap,reusable)
-                    //ImageCache.putBitmapToCathe("1",reusable)
-                    Log.e(TAG, "三级缓存：从网络缓存中获取Bitmap" )
+                    bitmap = ImageCache.setDirPath(MyApplication.context?.filesDir?.absolutePath).read(t)
+                    if (bitmap == null){
+                        val reusable  = ImageCache.getReUsable("1",660,600,1)
+                        bitmap = getImageFromNet(url,hashMap,reusable)
+                        ImageCache.write(bitmap,t)
+                        //ImageCache.putBitmapToCathe("1",reusable)
+                        Log.e(TAG, "三级网络缓存：从网络缓存中获取Bitmap" )
+                    }else{
+                        Log.e(TAG, "二级磁盘缓存: 读取成功" )
+                    }
                 }else{
-                    Log.e(TAG, "load: 从LruCathe中获取到变量" )
+                    Log.e(TAG, "一级内存缓存：读取成功" )
                 }
                 bitmap
             }
